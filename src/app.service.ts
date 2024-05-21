@@ -3,7 +3,12 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 
 export interface ScrapedContent {
-  cards: string[];
+  cards: ScrapedCard[];
+}
+
+interface ScrapedCard {
+  Nombre: string;
+  Monedas: string;
 }
 
 @Injectable()
@@ -22,9 +27,19 @@ export class AppService {
     const { data } = await axios.get(url);
     const $ = cheerio.load(data);
 
-    const cards: string[] = [];
-    $('.card').each((index, element) => {
-      cards.push($(element).html());
+    const cards: ScrapedCard[] = [];
+    $('.portfolio').each((index, element) => {
+      if ($(element).find('.sold-out').length === 0) {
+        $(element)
+          .find('.card')
+          .each((cardIndex, cardElement) => {
+            const nombre =
+              $(cardElement).find('img.card-img').attr('alt') || '';
+            const monedas = $(cardElement).find('strong').text();
+            cards.push({ Nombre: nombre, Monedas: monedas });
+          });
+        // cards.push($(element).html());
+      }
     });
 
     return { cards: cards };
